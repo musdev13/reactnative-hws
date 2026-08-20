@@ -6,14 +6,21 @@ export default function RootLayout() {
             <Stack.Screen
                 name="index"
                 options={{
-                    title: "Home",
+                    title: "Другорядна",
                 }}
             />
 
             <Stack.Screen
                 name="city"
                 options={{
-                    title: "My City",
+                    title: "Мой мiсто",
+                }}
+            />
+
+            <Stack.Screen
+                name="about"
+                options={{
+                    title: "Про мене",
                 }}
             />
         </Stack>

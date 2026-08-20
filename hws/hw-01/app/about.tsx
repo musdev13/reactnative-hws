@@ -8,70 +8,69 @@ import {
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const places = [
+const skills = [
     {
         id: "1",
-        icon: "⛲",
-        name: "Фонтан Roshen",
-        description:
-            "Одна з найвідоміших пам'яток Вінниці. Великий світломузичний фонтан розташований на набережній Південного Бугу.",
+        icon: "💻",
+        title: "Програмування",
+        description: "Розробка програм та вебзастосунків.",
     },
     {
         id: "2",
-        icon: "🏛️",
-        name: "Вінницькі Мури",
-        description:
-            "Історичний комплекс у центрі міста, який є важливою пам'яткою архітектури та частиною історії Вінниці.",
+        icon: "🎨",
+        title: "Дизайн",
+        description: "Створення інтерфейсів та візуальних матеріалів.",
     },
     {
         id: "3",
-        icon: "🚋",
-        name: "Вінницький трамвай",
-        description:
-            "Вінницький трамвай є одним із символів міста. Він відомий своєю історією та сучасними трамвайними маршрутами.",
+        icon: "🎬",
+        title: "Анімація та монтаж",
+        description: "Створення анімацій та редагування відео.",
     },
     {
         id: "4",
-        icon: "🌳",
-        name: "Центральний парк",
-        description:
-            "Великий парк у центрі Вінниці, де можна гуляти, відпочивати та проводити час із друзями.",
+        icon: "⚛️",
+        title: "React Native",
+        description: "Розробка мобільних застосунків.",
     },
 ];
 
-export default function CityPage() {
+export default function AboutPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.container}>
-                    <Text style={styles.title}>Вінниця</Text>
+                    <Text style={styles.title}>Про мене</Text>
 
                     <Image
-                        source={require("../assets/images/city.png")}
-                        style={styles.image}
+                        source={require("../assets/images/kotonak.jpg")}
+                        style={styles.avatar}
                     />
 
-                    <Text style={styles.sectionTitle}>Моє місто</Text>
+                    <Text style={styles.name}>Богдан Андрун Бурмалдрунович</Text>
 
                     <Text style={styles.description}>
-                        Вінниця — місто в центральній частині України,
-                        адміністративний центр Вінницької області. Місто
-                        відоме своїм фонтаном Roshen, затишними вулицями,
-                        парками та мальовничими краєвидами Південного Бугу.
+                        Мене цікавить програмування, дизайн та створення
+                        цифрового контенту. У вільний час я займаюся
+                        розробкою програм, анімацією та монтажем відео.
+                        Я вирішив вивчати React Native, щоб створювати
+                        мобільні застосунки за допомогою JavaScript та
+                        React. Мені цікаво поєднувати програмування з
+                        дизайном та створювати власні проєкти.
                     </Text>
 
                     <Text style={styles.sectionTitle}>
-                        Визначні місця
+                        Мої навички та інтереси
                     </Text>
 
-                    {places.map((place) => (
-                        <View key={place.id} style={styles.card}>
+                    {skills.map((skill) => (
+                        <View key={skill.id} style={styles.card}>
                             <Text style={styles.cardTitle}>
-                                {place.icon} {place.name}
+                                {skill.icon} {skill.title}
                             </Text>
 
                             <Text style={styles.cardDescription}>
-                                {place.description}
+                                {skill.description}
                             </Text>
                         </View>
                     ))}
@@ -82,9 +81,9 @@ export default function CityPage() {
                         </Text>
                     </Link>
 
-                    <Link href="/about" style={styles.secondaryButton}>
+                    <Link href="/city" style={styles.secondaryButton}>
                         <Text style={styles.secondaryButtonText}>
-                            👤 Про мене
+                            🏙️ Моє місто
                         </Text>
                     </Link>
                 </View>
@@ -103,33 +102,44 @@ const styles = StyleSheet.create({
     },
     container: {
         padding: 20,
+        alignItems: "center",
     },
     title: {
+        width: "100%",
         fontSize: 32,
         fontWeight: "bold",
         color: "#172033",
         textAlign: "center",
-        marginBottom: 20,
-    },
-    image: {
-        width: "100%",
-        height: 250,
-        borderRadius: 16,
         marginBottom: 24,
     },
-    sectionTitle: {
-        fontSize: 23,
+    avatar: {
+        width: 180,
+        height: 180,
+        borderRadius: 90,
+        marginBottom: 18,
+    },
+    name: {
+        fontSize: 28,
         fontWeight: "bold",
-        color: "#172033",
-        marginBottom: 12,
+        color: "#2563EB",
+        marginBottom: 20,
     },
     description: {
+        width: "100%",
         fontSize: 17,
         lineHeight: 27,
         color: "#475569",
-        marginBottom: 24,
+        marginBottom: 26,
+    },
+    sectionTitle: {
+        width: "100%",
+        fontSize: 23,
+        fontWeight: "bold",
+        color: "#172033",
+        marginBottom: 14,
     },
     card: {
+        width: "100%",
         backgroundColor: "#FFFFFF",
         padding: 18,
         borderRadius: 14,
@@ -157,6 +167,7 @@ const styles = StyleSheet.create({
         color: "#475569",
     },
     button: {
+        width: "100%",
         backgroundColor: "#2563EB",
         paddingVertical: 15,
         borderRadius: 12,
@@ -170,6 +181,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     secondaryButton: {
+        width: "100%",
         backgroundColor: "#FFFFFF",
         paddingVertical: 15,
         borderRadius: 12,
