@@ -1,5 +1,7 @@
 <h1 align="center">React Native Homeworks</h1>
 
+> jq is required for script work
+
 1. change directory: example `~/reactnative-hws/`
 
 2. run script to clone one:
