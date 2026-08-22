@@ -1,5 +1,29 @@
 #!/bin/bash
 
+# ============================================================
+# Platform
+# ============================================================
+
+case "$(uname -s)" in
+    Linux*)
+        OS="linux"
+        ;;
+
+    MINGW*|MSYS*|CYGWIN*)
+        OS="windows"
+        ;;
+
+    *)
+        echo "Error: Unsupported operating system."
+        echo "Supported systems: Linux and Windows."
+        exit 1
+        ;;
+esac
+
+# ============================================================
+# Dependencies
+# ============================================================
+
 if ! command -v git &> /dev/null; then
     echo "Error: git is not installed."
     exit 1
@@ -10,19 +34,59 @@ if ! command -v curl &> /dev/null; then
     exit 1
 fi
 
-if ! command -v jq &> /dev/null; then
-    echo "Error: jq is not installed."
-    echo "Install it with: sudo pacman -S jq"
-    exit 1
+# jq is only required on Linux.
+# Windows uses PowerShell for JSON parsing.
+if [ "$OS" = "linux" ]; then
+    if ! command -v jq &> /dev/null; then
+        echo "Error: jq is not installed."
+        echo "Install it with: sudo pacman -S jq"
+        exit 1
+    fi
 fi
+
+# ============================================================
+# Repository
+# ============================================================
 
 repo_owner="musdev13"
 repo_name="reactnative-hws"
+
 repo_url="https://github.com/$repo_owner/$repo_name.git"
 api_url="https://api.github.com/repos/$repo_owner/$repo_name"
 
 # Запоминаем директорию, из которой был запущен скрипт
 base_dir="$PWD"
+
+# ============================================================
+# JSON helpers
+# ============================================================
+
+get_default_branch() {
+    local json="$1"
+
+    if [ "$OS" = "windows" ]; then
+        printf '%s' "$json" |
+            powershell.exe -NoProfile -Command \
+            '$json = [Console]::In.ReadToEnd() | ConvertFrom-Json; $json.default_branch' |
+            tr -d '\r'
+    else
+        echo "$json" | jq -r '.default_branch'
+    fi
+}
+
+get_homework_folders() {
+    local json="$1"
+
+    if [ "$OS" = "windows" ]; then
+        printf '%s' "$json" |
+            powershell.exe -NoProfile -Command \
+            '$json = [Console]::In.ReadToEnd() | ConvertFrom-Json; $json | Where-Object { $_.type -eq "dir" } | ForEach-Object { $_.name }' |
+            tr -d '\r'
+    else
+        echo "$json" |
+            jq -r '.[] | select(.type == "dir") | .name'
+    fi
+}
 
 # ============================================================
 # GitHub API
@@ -37,7 +101,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-default_branch=$(echo "$repo_info" | jq -r '.default_branch')
+default_branch=$(get_default_branch "$repo_info")
 
 if [ -z "$default_branch" ] || [ "$default_branch" = "null" ]; then
     echo "Error: Failed to determine repository default branch."
@@ -54,14 +118,34 @@ if [ $? -ne 0 ]; then
 fi
 
 mapfile -t folders < <(
-    echo "$folders_json" |
-        jq -r '.[] | select(.type == "dir") | .name'
+    get_homework_folders "$folders_json"
 )
 
 if [ ${#folders[@]} -eq 0 ]; then
     echo "Error: No homework folders found in hws/."
     exit 1
 fi
+
+# ============================================================
+# Terminal helpers
+# ============================================================
+
+hide_cursor() {
+    tput civis 2>/dev/null || true
+}
+
+show_cursor() {
+    tput cnorm 2>/dev/null || true
+}
+
+clear_lines() {
+    local count="$1"
+
+    for ((i = 0; i < count; i++)); do
+        tput cuu1 2>/dev/null || printf '\033[1A'
+        tput el 2>/dev/null || printf '\033[2K'
+    done
+}
 
 # ============================================================
 # Folder selector
@@ -72,46 +156,57 @@ select_option() {
     local options=("$@")
     local num_options=${#options[@]}
 
-    tput civis
+    hide_cursor
 
     while true; do
+        # Draw options
         for i in "${!options[@]}"; do
             if [ "$i" -eq "$selected" ]; then
-                echo -e "\e[1;32m> ${options[$i]}\e[0m"
+                printf "\e[1;32m> %s\e[0m\n" "${options[$i]}"
             else
-                echo "  ${options[$i]}"
+                printf "  %s\n" "${options[$i]}"
             fi
         done
 
-        read -rsn3 key
-
-        for ((i=0; i<num_options; i++)); do
-            tput cuu1
-            tput el
-        done
+        # Read one character
+        IFS= read -rsn1 key
 
         case "$key" in
-            $'\x1b[A')
+            # Escape sequence
+            $'\x1b')
+                IFS= read -rsn2 key
+                ;;
+
+            # Enter
+            "")
+                break
+                ;;
+        esac
+
+        # Remove previous menu
+        clear_lines "$num_options"
+
+        case "$key" in
+            '[A')
                 ((selected--))
+
                 if [ "$selected" -lt 0 ]; then
                     selected=$((num_options - 1))
                 fi
                 ;;
 
-            $'\x1b[B')
+            '[B')
                 ((selected++))
+
                 if [ "$selected" -ge "$num_options" ]; then
                     selected=0
                 fi
                 ;;
-
-            "")
-                break
-                ;;
         esac
     done
 
-    tput cnorm
+    show_cursor
+
     return "$selected"
 }
 
@@ -120,6 +215,7 @@ select_option() {
 # ============================================================
 
 echo "Select a homework to clone (use ↑/↓ arrows and Enter):"
+echo
 
 select_option "${folders[@]}"
 
@@ -150,12 +246,17 @@ mkdir -p "$base_dir/hws"
 
 temp_dir=$(mktemp -d)
 
+if [ -z "$temp_dir" ] || [ ! -d "$temp_dir" ]; then
+    echo "Error: Failed to create temporary directory."
+    exit 1
+fi
+
 cleanup() {
     rm -rf "$temp_dir"
-    tput cnorm 2>/dev/null
+    show_cursor
 }
 
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 echo "Setting up temporary repository..."
 

@@ -1,6 +1,6 @@
 <h1 align="center">React Native Homeworks</h1>
 
-> jq is required for script work
+> jq is required for script work on linux
 
 1. change directory: example `~/reactnative-hws/`
 
